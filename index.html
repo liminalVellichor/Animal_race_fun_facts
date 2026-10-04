@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who outruns whom? Animal top speeds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap">
+<style>
+:root{
+  --paper:#edf1e8; --surface:#f8faf5; --ink:#13221a; --muted:#55645a; --line:#cad4c6;
+  --turf:#2d6943; --turf-2:#285f3c; --turf-deep:#1f4f31;
+  --chalk:#f4f8f1; --sky:#a6d3eb; --sky-ink:#0f3149; --cloud:rgba(255,255,255,.72);
+  --sea:#1c6a96;
+  --sun:#f2c12e; --sun-ink:#2e2300;
+  --bar-land:#2d6943; --bar-sky:#4f9fcd; --bar-water:#1c6a96; --bar-human:#d8a20f;
+  --gold:#f2c12e; --silver:#c3ccd2; --bronze:#cf8d4f;
+  --focus:#1c6a96;
+  --display:'Big Shoulders Display','Arial Narrow','Roboto Condensed',sans-serif;
+  --body:'Bricolage Grotesque',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --emoji:'Noto Color Emoji','Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0e1712; --surface:#15221a; --ink:#e3ebe4; --muted:#9bab9f; --line:#283a2f;
+    --turf:#1f4b30; --turf-2:#1b432b; --turf-deep:#153722;
+    --chalk:#eef4ec; --sky:#22465d; --sky-ink:#e6f2fa; --cloud:rgba(255,255,255,.16);
+    --sea:#103a55;
+    --bar-land:#57a676; --bar-sky:#6cb7e3; --bar-water:#3b8fc8; --bar-human:#f2c12e;
+    --focus:#6cb7e3;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0e1712; --surface:#15221a; --ink:#e3ebe4; --muted:#9bab9f; --line:#283a2f;
+  --turf:#1f4b30; --turf-2:#1b432b; --turf-deep:#153722;
+  --chalk:#eef4ec; --sky:#22465d; --sky-ink:#e6f2fa; --cloud:rgba(255,255,255,.16);
+  --sea:#103a55;
+  --bar-land:#57a676; --bar-sky:#6cb7e3; --bar-water:#3b8fc8; --bar-human:#f2c12e;
+  --focus:#6cb7e3;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 68px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.emo{font-family:var(--emoji);font-style:normal;line-height:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--paper) 86%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);border-bottom:1px solid var(--line)}
+.topbar-in{display:flex;align-items:center;gap:20px;height:58px}
+.mark{display:flex;align-items:center;gap:8px;font:800 23px/1 var(--display);color:var(--ink);text-decoration:none;letter-spacing:.01em}
+.mark .emo{font-size:22px}
+.nav{display:flex;gap:20px;margin-left:auto}
+.nav a{color:var(--muted);text-decoration:none;font-weight:600;font-size:15px}
+.nav a:hover{color:var(--ink)}
+
+/* segmented controls */
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;padding:6px 12px;border-radius:8px;line-height:1.2}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* hero */
+.hero{padding:clamp(28px,6vw,64px) 0 0}
+h1{font:900 clamp(62px,13.5vw,172px)/.84 var(--display);letter-spacing:-.005em;margin:0 0 20px;text-wrap:balance}
+.lede{font-size:clamp(17px,2vw,20px);max-width:52ch;color:var(--muted);margin:0 0 28px}
+.caption{color:var(--muted);font-size:14.5px;margin:12px 0 0;max-width:72ch}
+
+/* lanes (shared by hero heat, race, duel) */
+.lanes{position:relative;--start:78px;--end:26px;--rw:40px;--rh:38px;--es:32px;--rb:6px;--lane-h:62px}
+.lane{position:relative;height:var(--lane-h);color:var(--lane-ink);border-top:1px solid rgba(255,255,255,.2)}
+.lanes > .lane:first-of-type{border-top:0}
+.hab-land{--lane-ink:var(--chalk);background:repeating-linear-gradient(90deg,var(--turf) 0 64px,var(--turf-2) 64px 128px)}
+.hab-sky{--lane-ink:var(--sky-ink);background:
+  radial-gradient(64px 13px at 30% 34%,var(--cloud),transparent 70%),
+  radial-gradient(96px 16px at 72% 70%,var(--cloud),transparent 70%),
+  var(--sky);background-size:360px 100%,560px 100%,auto}
+.hab-water{--lane-ink:var(--chalk);background:
+  radial-gradient(16px 6px at 50% 100%,rgba(255,255,255,.17) 0 45%,transparent 52%) 0 0/36px 18px,
+  var(--sea)}
+.running .hab-sky{animation:drift 10s linear infinite}
+.running .hab-water{animation:waves 2.6s linear infinite}
+@keyframes drift{to{background-position:-360px 0,-560px 0,0 0}}
+@keyframes waves{to{background-position:-36px 0,0 0}}
+
+.start-line{position:absolute;top:0;bottom:0;left:calc(var(--start) - 1px);width:2px;background:var(--chalk);opacity:.75;z-index:1;pointer-events:none}
+.finish-line{position:absolute;top:0;bottom:0;right:calc(var(--end) - 6px);width:12px;z-index:1;pointer-events:none;
+  background:repeating-conic-gradient(#fff 0 25%,#1d1d1d 0 50%) 0 0/12px 12px;opacity:.95}
+.q-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.2);z-index:1;pointer-events:none;
+  left:calc(var(--start) + (100% - var(--start) - var(--end)) * var(--f))}
+.lane-name{position:absolute;left:calc(var(--start) + 8px);top:6px;z-index:1;font-weight:600;font-size:12.5px;line-height:1.2;white-space:nowrap;
+  max-width:calc(100% - var(--start) - var(--end) - 18px);overflow:hidden;text-overflow:ellipsis;opacity:.94}
+.lane-name small{font-size:inherit;font-weight:400;opacity:.8;margin-left:3px}
+.is-human .lane-name{color:var(--sun)}
+.lane-no{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font:800 14px/1 var(--display);background:rgba(0,0,0,.2);color:var(--lane-ink);z-index:1}
+.lane-no.p1{background:var(--gold);color:#2b2100}
+.lane-no.p2{background:var(--silver);color:#1b2226}
+.lane-no.p3{background:var(--bronze);color:#2a1605}
+.lane-time{position:absolute;right:calc(var(--end) + 12px);top:5px;z-index:3;font:800 16px/1 var(--display);letter-spacing:.02em;color:#f4f8f1;background:rgba(0,0,0,.42);padding:3px 7px;border-radius:7px;opacity:0;transform:translateY(-3px);transition:opacity .25s,transform .25s}
+.lane-time.show{opacity:1;transform:none}
+.lane.is-winner{box-shadow:inset 0 0 0 3px var(--sun)}
+
+.runner{position:absolute;left:0;bottom:var(--rb);width:var(--rw);height:var(--rh);z-index:2;will-change:transform;transition:opacity .25s}
+.runner .emo{display:block;font-size:var(--es);line-height:var(--rh);text-align:center;transform:scaleX(-1)}
+.bob{display:block;transform-origin:50% 85%}
+.streak{position:absolute;right:76%;top:54%;height:3px;width:0;border-radius:3px;background:linear-gradient(90deg,transparent,var(--lane-ink));opacity:.55;transition:width .35s ease;box-shadow:-10px -7px 0 -1px color-mix(in srgb,var(--lane-ink) 35%,transparent)}
+.running .runner:not(.done) .streak{width:var(--streak)}
+.running .runner:not(.done) .bob{animation:gallop var(--stride) ease-in-out infinite}
+.running .hab-sky .runner:not(.done) .bob{animation-name:glide;animation-duration:calc(var(--stride) * 2.4)}
+.running .hab-water .runner:not(.done) .bob{animation-name:swim;animation-duration:calc(var(--stride) * 2)}
+.running .runner.slow:not(.done) .bob{animation-name:creep}
+.fading .runner{opacity:0}
+@keyframes gallop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-5deg)}}
+@keyframes glide{0%,100%{transform:translateY(1px)}50%{transform:translateY(-5px)}}
+@keyframes swim{0%,100%{transform:rotate(5deg) translateY(1px)}50%{transform:rotate(-5deg) translateY(-2px)}}
+@keyframes creep{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.07)}}
+
+/* hero heat */
+.heat{border-radius:20px;overflow:hidden;--start:44px;--end:20px;--rw:34px;--rh:34px;--es:26px;--rb:3px;--lane-h:40px}
+.heat .lane-name{top:50%;transform:translateY(-50%)}
+
+/* sections */
+.block{padding:clamp(56px,9vw,104px) 0 0}
+.block-head h2{font:800 clamp(40px,5.4vw,60px)/.92 var(--display);margin:0 0 10px;letter-spacing:.005em}
+.block-head p{margin:0 0 24px;color:var(--muted);max-width:60ch}
+
+/* race */
+.presets{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px 12px;scrollbar-width:thin}
+.preset{flex:0 0 auto;display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:8px 14px 8px 10px;font-weight:600;font-size:14.5px}
+.preset .trio{font-family:var(--emoji);font-size:17px;letter-spacing:-3px}
+.preset:hover{border-color:var(--muted)}
+.preset[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.race-controls{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-bottom:16px}
+.ctl{display:flex;align-items:center;gap:10px}
+.ctl-label{font-size:14.5px;color:var(--muted)}
+.race-board{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:clamp(12px,2vw,18px)}
+.board-top{display:flex;align-items:center;flex-wrap:wrap;gap:10px 24px;margin:2px 4px 14px}
+.clock{display:flex;align-items:baseline;gap:5px;min-width:150px}
+.clock-num{font:800 60px/1 var(--display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.clock-unit{font:700 22px/1 var(--display);color:var(--muted)}
+.race-status{flex:1 1 220px;margin:0;color:var(--muted);font-size:15.5px}
+.race-btns{display:flex;gap:10px;margin-left:auto}
+.btn-go{border:0;background:var(--sun);color:var(--sun-ink);font-weight:700;font-size:16.5px;padding:12px 24px;border-radius:13px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.16)}
+.btn-go:hover{filter:brightness(1.04)}
+.btn-go:disabled{opacity:.55;cursor:default;filter:none}
+.btn-quiet{border:1px solid var(--line);background:transparent;font-weight:600;font-size:15px;padding:11px 16px;border-radius:13px}
+.btn-quiet:hover{border-color:var(--muted)}
+.track{position:relative;border-radius:16px;overflow:hidden;background:var(--turf-deep)}
+.ruler{position:relative;height:28px;color:var(--chalk);font-size:12px;font-weight:600;--start:78px;--end:26px}
+.ruler span{position:absolute;top:7px;white-space:nowrap;transform:translateX(-50%);opacity:.85;
+  left:calc(var(--start) + (100% - var(--start) - var(--end)) * var(--f))}
+.ruler span.last{transform:translateX(-88%)}
+.countdown{position:absolute;inset:28px 0 0;display:grid;place-items:center;pointer-events:none;z-index:6}
+.countdown span{font:900 clamp(84px,15vw,170px)/1 var(--display);color:var(--sun);text-shadow:0 6px 0 rgba(0,0,0,.3);animation:pop .5s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{from{transform:scale(1.7);opacity:0}to{transform:scale(1);opacity:1}}
+
+.results{margin-top:22px}
+.results h3{font:800 clamp(30px,4vw,40px)/1 var(--display);margin:0 0 6px}
+.results .sub{margin:0 0 14px;color:var(--muted);max-width:68ch}
+.res-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));column-gap:28px}
+.res-list li{display:grid;grid-template-columns:28px 32px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.res-list .emo{font-size:24px;text-align:center}
+.place{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 14px/1 var(--display);border:1px solid var(--line)}
+.place.p1{background:var(--gold);border-color:var(--gold);color:#2b2100}
+.place.p2{background:var(--silver);border-color:var(--silver);color:#1b2226}
+.place.p3{background:var(--bronze);border-color:var(--bronze);color:#2a1605}
+.res-name{font-weight:600;font-size:15px;line-height:1.25}
+.res-name small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.res-time{text-align:right;font:800 19px/1.05 var(--display);font-variant-numeric:tabular-nums}
+.res-time small{display:block;font:500 12.5px/1.2 var(--body);color:var(--muted)}
+.res-list li.is-human .res-name{text-decoration:underline;text-decoration-color:var(--bar-human);text-decoration-thickness:3px;text-underline-offset:4px}
+
+.picker{margin-top:18px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.picker summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:14px 18px;font-weight:600}
+.picker summary::-webkit-details-marker{display:none}
+.picker summary::before{content:'';width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .2s;margin-right:2px}
+.picker[open] summary::before{transform:rotate(45deg)}
+.picker summary span{font-weight:400;color:var(--muted)}
+.pick-body{padding:0 18px 18px}
+.pick-msg{margin:0 0 8px;min-height:1.4em;color:var(--muted);font-size:14.5px}
+.pick-group + .pick-group{margin-top:14px}
+.pick-group h3{font-size:14.5px;font-weight:600;color:var(--muted);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px 5px 8px;font-size:14px;font-weight:500}
+.chip .emo{font-size:17px}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+/* head to head */
+.duel-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:clamp(16px,3vw,28px)}
+.h2h{display:grid;grid-template-columns:1fr auto 1fr;gap:12px clamp(10px,3vw,28px);align-items:start}
+.side{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.side--b{align-items:flex-end;text-align:right}
+.side .big{font-family:var(--emoji);font-size:clamp(54px,9vw,88px);line-height:1}
+.side--a .big{transform:scaleX(-1)}
+.side .spd{font:800 clamp(30px,4.4vw,44px)/1 var(--display)}
+.side select{width:100%;max-width:300px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:var(--paper);font-size:15px}
+.side-note{margin:0;color:var(--muted);font-size:14px;max-width:36ch}
+.vs{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:clamp(18px,3vw,30px)}
+.vs b{font:900 36px/1 var(--display);color:var(--muted)}
+.duel-lanes{margin-top:22px;border-radius:16px;overflow:hidden;--start:58px;--end:22px;--rw:36px;--rh:34px;--es:28px;--rb:5px;--lane-h:52px}
+.duel-lanes .lane-name{font-size:11.5px}
+.verdict{font:800 clamp(32px,4.6vw,48px)/1 var(--display);margin:24px 0 10px}
+.points{list-style:none;margin:0;padding:0;max-width:70ch}
+.points li{padding:7px 0;border-top:1px solid var(--line)}
+.points b{font:800 1.22em/1 var(--display);letter-spacing:.01em}
+
+/* surprises */
+.fact-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));column-gap:36px}
+.fact-list li{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;padding:18px 0;border-top:1px solid var(--line);align-content:start}
+.fact-emo{font-family:var(--emoji);font-size:28px;line-height:1.1;grid-row:span 2;letter-spacing:-2px}
+.fact-list p{margin:0;max-width:48ch}
+.linkbtn{justify-self:start;border:0;background:none;padding:2px 0;font-weight:600;font-size:15px;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px;text-decoration-color:var(--bar-human)}
+
+/* ladder */
+.ladder-ctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:16px 0 4px;color:var(--muted);font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;background:var(--c)}
+.legend i.line{width:3px;height:16px;border-radius:2px}
+.scale-note{margin:4px 0 12px;color:var(--muted);font-size:14px}
+.rows{list-style:none;margin:0;padding:0;--cols:40px minmax(130px,230px) 1fr 92px}
+.row{border-bottom:1px solid var(--line)}
+.row.human{background:color-mix(in srgb,var(--bar-human) 11%,transparent)}
+.row-main{width:100%;display:grid;grid-template-columns:var(--cols);align-items:center;gap:12px;padding:7px 6px;border:0;background:none;text-align:left;border-radius:8px}
+.row-main:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.row-main .emo{font-size:24px;text-align:center}
+.r-name{font-weight:600;font-size:15px;line-height:1.25}
+.r-name small{display:inline-block;margin-left:6px;font-weight:500;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 5px;vertical-align:1px}
+.r-track{position:relative;height:14px;border-radius:4px;background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.r-track::after{content:'';position:absolute;top:-5px;bottom:-5px;left:var(--ref);width:2px;margin-left:-1px;border-radius:1px;background:var(--bar-human)}
+.r-bar{position:absolute;left:0;top:0;bottom:0;width:0;min-width:3px;border-radius:4px;background:var(--c);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.r-bar.dive{background:repeating-linear-gradient(135deg,var(--c) 0 6px,color-mix(in srgb,var(--c) 55%,transparent) 6px 10px)}
+.r-val{font:800 20px/1 var(--display);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row-more{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:2px 6px 14px 58px;color:var(--muted);font-size:14.5px}
+.row-more[hidden]{display:none}
+.row-more p{margin:0;max-width:62ch}
+.pill-btn{border:1px solid var(--ink);background:transparent;border-radius:999px;padding:5px 13px;font-size:14px;font-weight:600;color:var(--ink)}
+.pill-btn:hover{background:var(--ink);color:var(--paper)}
+.row-msg{font-size:13.5px}
+
+.notes{padding:clamp(56px,9vw,104px) 0 56px;max-width:70ch;color:var(--muted)}
+.notes h2{font:800 30px/1 var(--display);color:var(--ink);margin:0 0 12px}
+.notes p{margin:0 0 12px}
+
+@media (max-width:640px){
+  .nav{display:none}
+  .topbar-in .seg{margin-left:auto}
+  .lanes{--start:64px;--end:20px;--rw:34px;--rh:34px;--es:27px;--lane-h:56px}
+  .ruler{--start:64px;--end:20px}
+  .lane-no{left:7px;width:23px;height:23px;font-size:13px}
+  .lane-name{font-size:11.5px}
+  .clock-num{font-size:46px}
+  .clock{min-width:120px}
+  .race-btns{margin-left:0;width:100%}
+  .race-btns .btn-go{flex:1}
+  .heat{--start:36px;--rw:30px;--es:23px;--lane-h:36px}
+  .duel-lanes{--start:44px;--rw:32px;--es:25px}
+  .duel-lanes .lane-name{left:calc(var(--start) + 8px)}
+  .side select{font-size:14px;padding:8px 9px}
+  .row-main{grid-template-columns:32px 1fr auto;grid-template-areas:"e n v" "e t t";row-gap:6px}
+  .row-main .emo{grid-area:e}
+  .r-name{grid-area:n}
+  .r-val{grid-area:v}
+  .r-track{grid-area:t}
+  .row-more{padding-left:50px}
+}
+@media (prefers-reduced-motion:reduce){
+  .bob,.hab-sky,.hab-water{animation:none !important}
+  .r-bar,.streak,.runner,.lane-time{transition:none !important}
+  .countdown span{animation:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="mark" href="#top"><span class="emo" aria-hidden="true">🐆</span>Who outruns whom?</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#race">Race</a><a href="#duel">Head to head</a><a href="#ladder">All speeds</a>
+    </nav>
+    <div class="seg" role="group" aria-label="Speed units">
+      <button type="button" data-unit="kmh" aria-pressed="true">km/h</button>
+      <button type="button" data-unit="mph" aria-pressed="false">mph</button>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+  <section class="hero">
+    <h1>Who outruns whom?</h1>
+    <p class="lede" id="lede"></p>
+    <div class="lanes heat" id="heat" aria-hidden="true"></div>
+    <p class="caption" id="heatCaption"></p>
+  </section>
+
+  <section id="race" class="block" aria-labelledby="raceH">
+    <div class="block-head">
+      <h2 id="raceH">Race day</h2>
+      <p>Pick up to eight racers and a distance, then start the race. Each animal runs at its top speed from the gun to the line.</p>
+    </div>
+    <div class="presets" id="presets" role="group" aria-label="Ready-made line-ups"></div>
+    <div class="race-controls">
+      <div class="ctl"><span class="ctl-label" id="distLabel">Distance</span><div class="seg" id="distSeg" role="group" aria-labelledby="distLabel"></div></div>
+      <div class="ctl"><span class="ctl-label" id="rateLabel">Playback</span><div class="seg" id="rateSeg" role="group" aria-labelledby="rateLabel"></div></div>
+    </div>
+    <div class="race-board">
+      <div class="board-top">
+        <div class="clock" aria-hidden="true"><span class="clock-num" id="clock">0.00</span><span class="clock-unit">s</span></div>
+        <p class="race-status" id="raceStatus" aria-live="polite"></p>
+        <div class="race-btns">
+          <button type="button" class="btn-quiet" id="skipBtn" hidden>Skip to results</button>
+          <button type="button" class="btn-go" id="startBtn">Start race</button>
+        </div>
+      </div>
+      <div class="track" id="track">
+        <div class="ruler" id="ruler" aria-hidden="true"></div>
+        <div class="lanes" id="lanes"></div>
+        <div class="countdown" id="countdown" aria-hidden="true"></div>
+      </div>
+      <div class="results" id="results" hidden aria-live="polite"></div>
+    </div>
+    <details class="picker" id="picker">
+      <summary>Choose racers <span id="pickCount"></span></summary>
+      <div class="pick-body">
+        <p class="pick-msg" id="pickMsg" role="status"></p>
+        <div id="pickGroups"></div>
+      </div>
+    </details>
+  </section>
+
+  <section id="duel" class="block" aria-labelledby="duelH">
+    <div class="block-head">
+      <h2 id="duelH">Head to head</h2>
+      <p>Choose any two animals to see who wins, and by how much.</p>
+    </div>
+    <div class="duel-card">
+      <div class="h2h">
+        <div class="side side--a">
+          <span class="big" id="emoA" aria-hidden="true"></span>
+          <span class="spd" id="spdA"></span>
+          <label class="sr" for="selA">First animal</label>
+          <select id="selA"></select>
+          <p class="side-note" id="noteA"></p>
+        </div>
+        <div class="vs"><b aria-hidden="true">vs</b><button type="button" class="btn-quiet" id="swapBtn">Swap</button></div>
+        <div class="side side--b">
+          <span class="big" id="emoB" aria-hidden="true"></span>
+          <span class="spd" id="spdB"></span>
+          <label class="sr" for="selB">Second animal</label>
+          <select id="selB"></select>
+          <p class="side-note" id="noteB"></p>
+        </div>
+      </div>
+      <div class="lanes duel-lanes" id="duelLanes" aria-hidden="true"></div>
+      <h3 class="verdict" id="verdict" aria-live="polite"></h3>
+      <ul class="points" id="points"></ul>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="factsH">
+    <div class="block-head"><h2 id="factsH">A few surprises</h2></div>
+    <ul class="fact-list" id="facts"></ul>
+  </section>
+
+  <section id="ladder" class="block" aria-labelledby="ladderH">
+    <div class="block-head">
+      <h2 id="ladderH">Every animal, fastest first</h2>
+      <p>Tap an animal for a note on its speed, or to add it to the race.</p>
+    </div>
+    <div class="ladder-ctl">
+      <div class="seg" id="habSeg" role="group" aria-label="Show animals from"></div>
+      <div class="seg" id="scaleSeg" role="group" aria-label="Bar scale"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p class="scale-note" id="scaleNote"></p>
+    <ol class="rows" id="rows"></ol>
+  </section>
+
+  <footer class="notes">
+    <h2>About these numbers</h2>
+    <p>These are peak burst speeds: the fastest each animal has been recorded or reliably estimated to go, usually over a short distance. Figures vary between sources and between individuals, so treat them as approximate. Sky speeds are for flight and water speeds for swimming, and the peregrine falcon’s figure is for a dive. Speeds marked disputed rest on contested measurements.</p>
+    <p>Race times assume every animal hits top speed at the start and holds it to the finish. No real animal does that, which is why endurance runners such as the pronghorn, wolf and human do far better over long distances than this page suggests.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+const ANIMALS = [
+  {id:'cheetah',name:'Cheetah',e:'🐆',kmh:104,hab:'land',note:'Fastest land animal, but only for bursts of a few hundred metres before it overheats.'},
+  {id:'pronghorn',name:'Pronghorn',e:'🦌',kmh:88,hab:'land',note:'Can hold about {55} for kilometres, so over a long race it would beat a cheetah.'},
+  {id:'horse',name:'Quarter horse',e:'🐎',kmh:88,hab:'land',note:'Bred for the quarter-mile sprint. Thoroughbreds peak nearer {70}.'},
+  {id:'wildebeest',name:'Blue wildebeest',e:'🐃',kmh:80,hab:'land',note:'Matches a lion for top speed and keeps going for longer.'},
+  {id:'lion',name:'Lion',e:'🦁',kmh:80,hab:'land',note:'Its sprints are short, so it stalks close before charging.'},
+  {id:'greyhound',name:'Greyhound',e:'🐕',kmh:72,hab:'land',note:'The fastest dog breed.'},
+  {id:'hare',name:'Brown hare',e:'🐇',kmh:72,hab:'land',note:'Zig-zags sharply to shake off predators.'},
+  {id:'kangaroo',name:'Red kangaroo',e:'🦘',kmh:70,hab:'land',note:'Hopping costs it little extra energy as it speeds up.'},
+  {id:'camel',name:'Dromedary camel',e:'🐪',kmh:65,hab:'land',note:'A short burst. It can cruise at about {40} for long stretches.'},
+  {id:'tiger',name:'Tiger',e:'🐅',kmh:65,hab:'land',note:'Built for power and ambush rather than long chases.'},
+  {id:'zebra',name:'Plains zebra',e:'🦓',kmh:64,hab:'land'},
+  {id:'giraffe',name:'Giraffe',e:'🦒',kmh:60,hab:'land',note:'Gallops on legs taller than most people.'},
+  {id:'wolf',name:'Grey wolf',e:'🐺',kmh:60,hab:'land',note:'Wins by endurance: a pack can trot for hours.'},
+  {id:'moose',name:'Moose',e:'🫎',kmh:56,hab:'land'},
+  {id:'grizzly',name:'Grizzly bear',e:'🐻',kmh:56,hab:'land',note:'Faster than any human sprinter, uphill or down.'},
+  {id:'rhino',name:'Black rhino',e:'🦏',kmh:55,hab:'land',note:'Charges in short bursts despite weighing over a tonne.'},
+  {id:'fox',name:'Red fox',e:'🦊',kmh:50,hab:'land'},
+  {id:'cat',name:'House cat',e:'🐈',kmh:48,hab:'land',note:'Over a short dash, faster than Usain Bolt.'},
+  {id:'bolt',name:'Usain Bolt',e:'🏃‍♂️',kmh:44.7,hab:'land',human:true,proper:true,note:'His peak speed during the 9.58 s world-record 100 m in 2009.'},
+  {id:'polarbear',name:'Polar bear',e:'🐻‍❄️',kmh:40,hab:'land',note:'Quick over short distances, but overheats fast.'},
+  {id:'gorilla',name:'Gorilla',e:'🦍',kmh:32,hab:'land'},
+  {id:'hippo',name:'Hippopotamus',e:'🦛',kmh:30,hab:'land',note:'Surprisingly quick on land for an animal weighing well over a tonne.'},
+  {id:'elephant',name:'African elephant',lc:'African elephant',e:'🐘',kmh:25,hab:'land',note:'Never has all four feet off the ground. Older estimates of {40} are likely too high.'},
+  {id:'human',name:'Average adult (sprint)',e:'🏃‍♀️',kmh:24,hab:'land',human:true,note:'A typical healthy adult running flat out over a short distance. Many people are slower.'},
+  {id:'squirrel',name:'Grey squirrel',e:'🐿️',kmh:20,hab:'land'},
+  {id:'komodo',name:'Komodo dragon',lc:'Komodo dragon',e:'🦎',kmh:20,hab:'land',note:'Short bursts only; it hunts mostly by ambush.'},
+  {id:'pig',name:'Domestic pig',e:'🐖',kmh:17,hab:'land'},
+  {id:'mamba',name:'Black mamba',e:'🐍',kmh:16,hab:'land',note:'The fastest snake. Claims of {20} or more are probably exaggerated.'},
+  {id:'croc',name:'Saltwater crocodile',e:'🐊',kmh:15,hab:'land',note:'Short bursts on land; far quicker in water.'},
+  {id:'chicken',name:'Chicken',e:'🐓',kmh:14,hab:'land'},
+  {id:'mouse',name:'House mouse',e:'🐁',kmh:13,hab:'land',note:'Covers many body lengths per second for its size.'},
+  {id:'tortoise',name:'Giant tortoise',e:'🐢',kmh:0.3,hab:'land',note:'Needs about 20 minutes to cover 100 m.'},
+  {id:'sloth',name:'Three-toed sloth',e:'🦥',kmh:0.24,hab:'land',note:'Moves slowly to save energy on a low-calorie diet of leaves.'},
+  {id:'snail',name:'Garden snail',e:'🐌',kmh:0.05,hab:'land',note:'Needs about two hours to cover 100 m.'},
+  {id:'falcon',name:'Peregrine falcon (dive)',e:'🦅',kmh:389,hab:'sky',dive:true,note:'Measured in a hunting dive. In level flight it manages about {90}.'},
+  {id:'bat',name:'Brazilian free-tailed bat',lc:'Brazilian free-tailed bat',e:'🦇',kmh:160,hab:'sky',disputed:true,note:'Fastest level flight reported (2016), though the tracking method has been questioned.'},
+  {id:'swift',name:'Common swift',e:'🐦',kmh:111,hab:'sky',note:'Measured in level flight. Swifts can stay airborne for months.'},
+  {id:'pigeon',name:'Racing pigeon',e:'🕊️',kmh:90,hab:'sky',note:'A fast race pace; a tailwind pushes it higher.'},
+  {id:'flamingo',name:'Flamingo',e:'🦩',kmh:55,hab:'sky',note:'Often migrates in flocks at night.'},
+  {id:'bee',name:'Honeybee',e:'🐝',kmh:25,hab:'sky',note:'Slower when loaded with nectar or pollen.'},
+  {id:'housefly',name:'Housefly',e:'🪰',kmh:7,hab:'sky'},
+  {id:'mosquito',name:'Mosquito',e:'🦟',kmh:2,hab:'sky',note:'One of the slowest flying insects.'},
+  {id:'sailfish',name:'Sailfish',e:'🐟',kmh:110,hab:'water',disputed:true,note:'The classic figure. Field measurements suggest it hunts far slower than this.'},
+  {id:'tuna',name:'Yellowfin tuna',e:'🐟',kmh:75,hab:'water',note:'Warm-bodied swimming muscles help it sprint.'},
+  {id:'mako',name:'Shortfin mako',e:'🦈',kmh:74,hab:'water',disputed:true,note:'The fastest shark, though estimates vary widely.'},
+  {id:'dolphin',name:'Common dolphin',e:'🐬',kmh:60,hab:'water'},
+  {id:'orca',name:'Orca',e:'🐋',kmh:56,hab:'water'},
+  {id:'gwshark',name:'Great white shark',e:'🦈',kmh:40,hab:'water',note:'Bursts upward to ambush seals near the surface.'},
+  {id:'sealion',name:'California sea lion',lc:'California sea lion',e:'🦭',kmh:40,hab:'water',note:'The fastest of the seals and sea lions.'},
+  {id:'penguin',name:'Gentoo penguin',e:'🐧',kmh:36,hab:'water',note:'The fastest swimming bird.'},
+  {id:'leatherback',name:'Leatherback turtle',e:'🐢',kmh:35,hab:'water',note:'Listed as the fastest reptile on record.'},
+  {id:'bluewhale',name:'Blue whale',e:'🐳',kmh:30,hab:'water',note:'The largest animal ever. It usually travels much slower than this.'},
+  {id:'swimmer',name:'Elite human swimmer',e:'🏊‍♂️',kmh:8.6,hab:'water',human:true,note:'Elite freestylers peak at roughly 2.4 metres per second.'}
+];
+
+const HAB_LABEL = {land:'Land', sky:'Sky', water:'Water'};
+const PRESETS = [
+  {id:'classic', label:'Classic sprint', ids:['cheetah','horse','lion','greyhound','grizzly','cat','bolt','elephant']},
+  {id:'savanna', label:'Savanna', ids:['cheetah','lion','wildebeest','zebra','giraffe','rhino','hippo','elephant']},
+  {id:'bolt', label:'Can Bolt win?', ids:['bolt','cat','grizzly','polarbear','gorilla','hippo','elephant','human']},
+  {id:'mixed', label:'Land, sea and sky', ids:['falcon','swift','sailfish','cheetah','horse','dolphin','bolt','penguin']},
+  {id:'home', label:'Home and farm', ids:['horse','greyhound','cat','squirrel','pig','chicken','mouse','human']},
+  {id:'slow', label:'Slowpokes', ids:['chicken','mouse','swimmer','housefly','mosquito','tortoise','sloth','snail']}
+];
+const FACTS = [
+  {emo:'🦌🐆', text:'Over a long race the pronghorn wins. A cheetah overheats after a few hundred metres, while a pronghorn can hold about {55} for kilometres.'},
+  {emo:'🐈🏃‍♂️', text:'A house cat would edge out Usain Bolt over a short dash.', race:['cat','bolt']},
+  {emo:'🐻🏃‍♀️', text:'No human can outrun a grizzly bear, and running downhill does not help.', race:['grizzly','bolt','human']},
+  {emo:'🐘🦛', text:'Usain Bolt would beat a hippo and an elephant. An average adult would only just lose to the elephant.', race:['bolt','hippo','elephant','human']},
+  {emo:'🦅🦇', text:'The peregrine falcon is the fastest animal of all, but only in a dive. In level flight, swifts and free-tailed bats are quicker.', race:['falcon','bat','swift']},
+  {emo:'🐌🐢', text:'A garden snail needs about two hours to cover 100 m. A giant tortoise needs about 20 minutes.'}
+];
+const MAX_LANES = 8;
+const BOLT_KMH = 44.7;
+
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const byId = {};
+ANIMALS.forEach(a => { byId[a.id] = a; });
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let unit = 'kmh';
+try { const u = localStorage.getItem('topspeed-unit'); if (u === 'kmh' || u === 'mph') unit = u; } catch (e) {}
+
+/* ---------- formatting ---------- */
+function fmtNum(v){
+  if (v >= 100) return String(Math.round(v));
+  if (v >= 1) return String(Math.round(v * 10) / 10);
+  return String(parseFloat(v.toPrecision(2)));
+}
+function fmtSpeed(kmh){
+  return unit === 'kmh' ? fmtNum(kmh) + ' km/h' : fmtNum(kmh * 0.621371) + ' mph';
+}
+function fmtDur(s){
+  if (!isFinite(s)) return '–';
+  if (s < 10) return s.toFixed(2) + ' s';
+  if (s < 60) return s.toFixed(1) + ' s';
+  if (s < 3600){ const t = Math.round(s), m = Math.floor(t / 60), r = t % 60; return r ? m + ' min ' + r + ' s' : m + ' min'; }
+  const tm = Math.round(s / 60), h = Math.floor(tm / 60), m = tm % 60;
+  return m ? h + ' h ' + m + ' min' : h + ' h';
+}
+function fmtDist(m){
+  if (m < 1) return Math.max(1, Math.round(m * 100)) + ' cm';
+  if (m < 10) return (Math.round(m * 10) / 10) + ' m';
+  if (m < 1000) return Math.round(m) + ' m';
+  return (Math.round(m / 10) / 100) + ' km';
+}
+function fmtClock(t){
+  if (t < 60) return t.toFixed(2);
+  const m = Math.floor(t / 60), s = t - m * 60;
+  return m + ':' + s.toFixed(1).padStart(4, '0');
+}
+function speedSpan(kmh){ return '<span data-kmh="' + kmh + '">' + fmtSpeed(kmh) + '</span>'; }
+function withSpeeds(text){ return esc(text).replace(/\{([\d.]+)\}/g, (m, n) => speedSpan(parseFloat(n))); }
+function lcName(a){ return a.lc || (a.name.charAt(0).toLowerCase() + a.name.slice(1)); }
+function mid(a){ return a.proper ? a.name : 'the ' + lcName(a); }
+function cap(a){ return a.proper ? a.name : 'The ' + lcName(a); }
+function listNames(arr){ const n = arr.map(r => r.a.name); return n.length < 3 ? n.join(' and ') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]; }
+function refreshSpeeds(){ $$('[data-kmh]').forEach(el => { el.textContent = fmtSpeed(parseFloat(el.dataset.kmh)); }); }
+
+/* ---------- runners & geometry ---------- */
+function stride(a){ return a.kmh < 1 ? 1.4 : Math.max(0.16, 0.9 - Math.log10(a.kmh) * 0.33); }
+function streak(a){ return a.kmh < 1 ? 0 : Math.round(Math.min(90, 8 + Math.log10(a.kmh + 1) * 30)); }
+function runnerHTML(a){
+  return '<div class="runner' + (a.kmh < 1 ? ' slow' : '') + '" style="--stride:' + stride(a).toFixed(2) + 's;--streak:' + streak(a) + 'px">' +
+    '<span class="streak"></span><span class="bob"><span class="emo">' + a.e + '</span></span></div>';
+}
+function geom(el){
+  const cs = getComputedStyle(el);
+  return {
+    W: el.clientWidth,
+    start: parseFloat(cs.getPropertyValue('--start')) || 70,
+    end: parseFloat(cs.getPropertyValue('--end')) || 24,
+    rw: parseFloat(cs.getPropertyValue('--rw')) || 40
+  };
+}
+function xAt(g, p){ return (g.start - g.rw) + p * ((g.W - g.end) - g.start); }
+function moveTo(el, g, p){ el.style.transform = 'translate3d(' + xAt(g, p).toFixed(1) + 'px,0,0)'; }
+
+/* ---------- looping heats (hero + head to head) ---------- */
+function makeHeat(container, showSpeeds){
+  const h = { runners: [], t: 0, last: 0, raf: 0, vis: false, fading: false, cross: 3, period: 4, staticT: 3, g: null };
+  h.set = function(ids, cross, period, staticT){
+    const as = ids.map(id => byId[id]);
+    const ref = Math.max.apply(null, as.map(a => a.kmh));
+    h.cross = cross; h.period = period; h.staticT = staticT;
+    container.innerHTML = '<span class="start-line"></span><span class="finish-line"></span>' + as.map(a =>
+      '<div class="lane hab-' + a.hab + (a.human ? ' is-human' : '') + '"><span class="lane-name">' + esc(a.name) +
+      (showSpeeds ? ' <small data-kmh="' + a.kmh + '">' + fmtSpeed(a.kmh) + '</small>' : '') + '</span>' + runnerHTML(a) + '</div>').join('');
+    h.runners = $$('.lane', container).map((lane, i) => ({ el: lane.querySelector('.runner'), rel: as[i].kmh / ref }));
+    h.t = 0; h.g = geom(container); h.place();
+  };
+  h.place = function(){
+    const t = reduceMotion ? h.staticT : h.t;
+    h.runners.forEach(r => {
+      const p = Math.min(1, (t / h.cross) * r.rel);
+      moveTo(r.el, h.g, p);
+      r.el.classList.toggle('done', p >= 1);
+    });
+  };
+  h.tick = function(now){
+    const dt = Math.min(0.05, Math.max(0, (now - h.last) / 1000)); h.last = now;
+    if (!h.fading){
+      h.t += dt;
+      if (h.t >= h.period){
+        h.fading = true; container.classList.add('fading');
+        setTimeout(() => { h.t = 0; h.place(); container.classList.remove('fading'); h.fading = false; }, 280);
+      }
+      h.place();
+    }
+    h.raf = requestAnimationFrame(h.tick);
+  };
+  h.play = function(){ if (reduceMotion || h.raf) return; container.classList.add('running'); h.last = performance.now(); h.raf = requestAnimationFrame(h.tick); };
+  h.pause = function(){ cancelAnimationFrame(h.raf); h.raf = 0; container.classList.remove('running'); };
+  h.relayout = function(){ h.g = geom(container); h.place(); };
+  if ('IntersectionObserver' in window){
+    new IntersectionObserver(es => { h.vis = es[0].isIntersecting; if (h.vis && !document.hidden) h.play(); else h.pause(); }).observe(container);
+  } else { h.vis = true; h.play(); }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) h.pause(); else if (h.vis) h.play(); });
+  return h;
+}
+
+/* ---------- hero ---------- */
+const nHumans = ANIMALS.filter(a => a.human).length;
+$('#lede').textContent = 'Top speeds for ' + (ANIMALS.length - nHumans) + ' animals and ' + nHumans + ' human benchmarks. Race them, settle a head-to-head, or scroll the full list.';
+const HEAT_IDS = ['cheetah','horse','bolt','elephant','tortoise','snail'];
+const HEAT_CROSS = 3.2;
+const heat = makeHeat($('#heat'), true);
+heat.set(HEAT_IDS, HEAT_CROSS, HEAT_CROSS * 104 / 25 + 1.8, 6);
+(function(){
+  const t = id => HEAT_CROSS * 104 / byId[id].kmh;
+  $('#heatCaption').textContent = 'A live heat at true relative speed. The cheetah crosses in ' + t('cheetah').toFixed(1) +
+    ' s, Usain Bolt in ' + t('bolt').toFixed(1) + ' s and the elephant in ' + t('elephant').toFixed(1) +
+    ' s. At this pace the tortoise would need ' + fmtDur(t('tortoise')) + ' and the snail ' + fmtDur(t('snail')) + '.';
+})();
+
+/* ---------- segmented helper ---------- */
+function makeSeg(el, options, current, onPick){
+  el.innerHTML = options.map(o => '<button type="button" data-v="' + o.v + '" aria-pressed="' + (o.v === current) + '">' + o.label + '</button>').join('');
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $$('button', el).forEach(c => c.setAttribute('aria-pressed', String(c === b)));
+    onPick(b.dataset.v);
+  });
+}
+function setSeg(el, v){ $$('button', el).forEach(c => c.setAttribute('aria-pressed', String(c.dataset.v === String(v)))); }
+
+/* ---------- race ---------- */
+const race = { ids: PRESETS[0].ids.slice(), dist: 100, rate: 1, phase: 'idle', simT: 0, endT: 0, racers: [], cap: 0, raf: 0, last: 0, timers: [], g: null };
+const lanesEl = $('#lanes'), trackEl = $('#track'), clockEl = $('#clock'), statusEl = $('#raceStatus');
+const startBtn = $('#startBtn'), skipBtn = $('#skipBtn'), resultsEl = $('#results'), cdEl = $('#countdown'), rulerEl = $('#ruler');
+
+function rateText(){ return race.rate === 1 ? 'shown in real time' : race.rate < 1 ? 'shown at quarter speed' : 'shown at 4× speed'; }
+
+function buildTrack(){
+  stopRace();
+  const D = race.dist, marks = [0, 0.25, 0.5, 0.75, 1];
+  rulerEl.innerHTML = marks.map((f, i) => '<span style="--f:' + f + '"' + (i === marks.length - 1 ? ' class="last"' : '') + '>' + (f === 0 ? 'Start' : fmtDist(D * f)) + '</span>').join('');
+  let html = marks.slice(1, 4).map(f => '<span class="q-line" style="--f:' + f + '"></span>').join('') + '<span class="start-line"></span><span class="finish-line"></span>';
+  html += race.ids.map((id, i) => {
+    const a = byId[id];
+    return '<div class="lane hab-' + a.hab + (a.human ? ' is-human' : '') + '"><span class="lane-no">' + (i + 1) + '</span>' +
+      '<span class="lane-name">' + esc(a.name) + ' <small data-kmh="' + a.kmh + '">' + fmtSpeed(a.kmh) + '</small></span>' +
+      '<span class="lane-time"></span>' + runnerHTML(a) + '</div>';
+  }).join('');
+  lanesEl.innerHTML = html;
+  race.racers = $$('.lane', lanesEl).map((lane, i) => {
+    const a = byId[race.ids[i]], v = a.kmh / 3.6;
+    return { a, v, t: D / v, lane, el: lane.querySelector('.runner'), timeEl: lane.querySelector('.lane-time'), noEl: lane.querySelector('.lane-no'), p: 0, done: false, place: 0, idx: i };
+  });
+  const sorted = race.racers.slice().sort((x, y) => x.t - y.t);
+  sorted.forEach((r, i) => { r.place = (i > 0 && Math.abs(r.t - sorted[i - 1].t) < 1e-9) ? sorted[i - 1].place : i + 1; });
+  race.cap = sorted.length ? Math.min(Math.max(sorted[0].t * 4, 15), sorted[0].t + 60) : 0;
+  race.simT = 0; race.endT = 0; race.phase = 'idle';
+  clockEl.textContent = '0.00';
+  resultsEl.hidden = true; resultsEl.innerHTML = '';
+  skipBtn.hidden = true;
+  race.g = geom(lanesEl);
+  layoutRace();
+  updateRaceUI();
+  syncPresets(); syncChips(); syncLadderButtons();
+  $('#pickCount').textContent = '(' + race.ids.length + ' of ' + MAX_LANES + ' lanes filled)';
+}
+function layoutRace(){ if (!race.g) return; race.racers.forEach(r => moveTo(r.el, race.g, r.p)); }
+function stopRace(){
+  cancelAnimationFrame(race.raf); race.raf = 0;
+  race.timers.forEach(clearTimeout); race.timers = [];
+  cdEl.innerHTML = '';
+  trackEl.classList.remove('running');
+}
+function updateRaceUI(){
+  const n = race.ids.length;
+  startBtn.disabled = n < 2 || race.phase === 'countdown' || race.phase === 'running';
+  startBtn.textContent = race.phase === 'done' ? 'Race again' : (race.phase === 'idle' ? 'Start race' : 'Racing…');
+  let s;
+  if (n < 2) s = 'Pick at least two racers to start.';
+  else if (race.phase === 'idle') s = n + ' racers over ' + fmtDist(race.dist) + ', ' + rateText() + '.';
+  else if (race.phase === 'countdown') s = 'On your marks…';
+  else if (race.phase === 'running') s = 'Racing, ' + rateText() + '.';
+  else {
+    const maxT = Math.max.apply(null, race.racers.map(r => r.t));
+    s = race.endT >= maxT - 1e-9 ? 'Every racer has crossed the line.' : 'Stopped at ' + fmtDur(race.endT) + '. The rest are still on their way; their times are worked out below.';
+  }
+  statusEl.textContent = s;
+}
+function countdown(done){
+  if (reduceMotion){ done(); return; }
+  const seq = ['3', '2', '1']; let i = 0;
+  (function step(){
+    if (i < seq.length){ cdEl.innerHTML = '<span>' + seq[i++] + '</span>'; race.timers.push(setTimeout(step, 620)); }
+    else { cdEl.innerHTML = '<span>Go!</span>'; done(); race.timers.push(setTimeout(() => { cdEl.innerHTML = ''; }, 650)); }
+  })();
+}
+function startRace(){
+  if (race.ids.length < 2 || race.phase === 'countdown' || race.phase === 'running') return;
+  if (race.phase === 'done') buildTrack();
+  race.phase = 'countdown'; skipBtn.hidden = false; updateRaceUI();
+  countdown(() => {
+    race.phase = 'running'; race.simT = 0; race.last = performance.now();
+    trackEl.classList.add('running'); updateRaceUI();
+    race.raf = requestAnimationFrame(tick);
+  });
+}
+function markFinished(r){
+  r.done = true;
+  r.el.classList.add('done');
+  r.timeEl.textContent = fmtDur(r.t);
+  r.timeEl.classList.add('show');
+  r.noEl.textContent = r.place;
+  r.noEl.className = 'lane-no' + (r.place <= 3 ? ' p' + r.place : '');
+  if (r.place === 1) r.lane.classList.add('is-winner');
+}
+function tick(now){
+  const dt = Math.min(0.05, Math.max(0, (now - race.last) / 1000)); race.last = now;
+  race.simT += dt * race.rate;
+  const t = Math.min(race.simT, race.cap);
+  let allDone = true;
+  race.racers.forEach(r => {
+    r.p = Math.min(1, t * r.v / race.dist);
+    if (!r.done && t >= r.t) markFinished(r);
+    if (!r.done) allDone = false;
+  });
+  layoutRace();
+  clockEl.textContent = fmtClock(t);
+  if (allDone){ finishRace(Math.max.apply(null, race.racers.map(r => r.t))); return; }
+  if (t >= race.cap){ finishRace(race.cap); return; }
+  race.raf = requestAnimationFrame(tick);
+}
+function finishRace(endT){
+  stopRace();
+  race.phase = 'done'; race.endT = endT;
+  race.racers.forEach(r => {
+    r.p = Math.min(1, endT * r.v / race.dist);
+    if (!r.done && endT >= r.t) markFinished(r);
+    r.noEl.textContent = r.place;
+    r.noEl.className = 'lane-no' + (r.place <= 3 ? ' p' + r.place : '');
+    if (r.place === 1) r.lane.classList.add('is-winner');
+  });
+  layoutRace();
+  clockEl.textContent = fmtClock(endT);
+  skipBtn.hidden = true;
+  renderResults();
+  updateRaceUI();
+}
+function renderResults(){
+  const rs = race.racers.slice().sort((x, y) => x.t - y.t);
+  const w = rs[0], winners = rs.filter(r => r.place === 1);
+  const title = winners.length > 1 ? 'Dead heat: ' + listNames(winners) + ' in ' + fmtDur(w.t) : w.a.name + ' wins in ' + fmtDur(w.t);
+  const second = rs.find(r => r.place > 1);
+  const sub = second ? cap(second.a) + ' crosses ' + fmtDur(second.t - w.t) + ' later, ' + fmtDist(race.dist - w.t * second.v) + ' behind when the winner hits the line.' : '';
+  const items = rs.map(r => {
+    const projected = r.t > race.endT + 1e-6;
+    return '<li' + (r.a.human ? ' class="is-human"' : '') + '><span class="place' + (r.place <= 3 ? ' p' + r.place : '') + '">' + r.place + '</span>' +
+      '<span class="emo">' + r.a.e + '</span><span class="res-name">' + esc(r.a.name) + (projected ? '<small>Still running, time projected</small>' : '') + '</span>' +
+      '<span class="res-time">' + fmtDur(r.t) + (r.place > 1 ? '<small>+' + fmtDur(r.t - w.t) + '</small>' : '') + '</span></li>';
+  }).join('');
+  resultsEl.innerHTML = '<h3>' + esc(title) + '</h3>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '') + '<ol class="res-list">' + items + '</ol>';
+  resultsEl.hidden = false;
+}
+startBtn.addEventListener('click', startRace);
+skipBtn.addEventListener('click', () => {
+  if (race.phase !== 'countdown' && race.phase !== 'running') return;
+  const maxT = Math.max.apply(null, race.racers.map(r => r.t));
+  finishRace(Math.min(maxT, race.cap));
+});
+
+makeSeg($('#distSeg'), [{v:100,label:'100 m'},{v:400,label:'400 m'},{v:1000,label:'1 km'}], race.dist, v => { race.dist = parseFloat(v); buildTrack(); });
+makeSeg($('#rateSeg'), [{v:0.25,label:'¼× slow-mo'},{v:1,label:'Real time'},{v:4,label:'4× fast'}], race.rate, v => { race.rate = parseFloat(v); updateRaceUI(); });
+
+/* presets */
+$('#presets').innerHTML = PRESETS.map(p => '<button type="button" class="preset" data-p="' + p.id + '" aria-pressed="false"><span class="trio" aria-hidden="true">' +
+  p.ids.slice(0, 3).map(id => byId[id].e).join('') + '</span>' + esc(p.label) + '</button>').join('');
+$('#presets').addEventListener('click', e => {
+  const b = e.target.closest('.preset'); if (!b) return;
+  const p = PRESETS.find(x => x.id === b.dataset.p);
+  race.ids = p.ids.slice(); $('#pickMsg').textContent = '';
+  buildTrack();
+});
+function syncPresets(){
+  $$('.preset').forEach(b => {
+    const p = PRESETS.find(x => x.id === b.dataset.p);
+    const same = p.ids.length === race.ids.length && p.ids.every((id, i) => race.ids[i] === id);
+    b.setAttribute('aria-pressed', String(same));
+  });
+}
+
+/* racer picker */
+$('#pickGroups').innerHTML = ['land', 'sky', 'water'].map(h => '<div class="pick-group"><h3>' + HAB_LABEL[h] + '</h3><div class="chips">' +
+  ANIMALS.filter(a => a.hab === h).sort((x, y) => y.kmh - x.kmh).map(a =>
+    '<button type="button" class="chip" data-id="' + a.id + '" aria-pressed="false"><span class="emo" aria-hidden="true">' + a.e + '</span>' + esc(a.name) + '</button>').join('') +
+  '</div></div>').join('');
+$('#pickGroups').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  if (!toggleRacer(b.dataset.id)) $('#pickMsg').textContent = 'All eight lanes are full. Remove a racer to add another.';
+  else $('#pickMsg').textContent = '';
+});
+function toggleRacer(id){
+  const i = race.ids.indexOf(id);
+  if (i >= 0) race.ids.splice(i, 1);
+  else { if (race.ids.length >= MAX_LANES) return false; race.ids.push(id); }
+  buildTrack();
+  return true;
+}
+function syncChips(){ $$('.chip').forEach(c => c.setAttribute('aria-pressed', String(race.ids.indexOf(c.dataset.id) >= 0))); }
+
+/* ---------- head to head ---------- */
+const h2h = { a: 'bolt', b: 'grizzly' };
+const duel = makeHeat($('#duelLanes'), false);
+function optionsHTML(){
+  return ['land', 'sky', 'water'].map(h => '<optgroup label="' + HAB_LABEL[h] + '">' +
+    ANIMALS.filter(a => a.hab === h).sort((x, y) => y.kmh - x.kmh).map(a => '<option value="' + a.id + '">' + esc(a.name) + ' (' + fmtSpeed(a.kmh) + ')</option>').join('') +
+    '</optgroup>').join('');
+}
+function fillSelects(){
+  ['a', 'b'].forEach(k => { const sel = $('#sel' + k.toUpperCase()); sel.innerHTML = optionsHTML(); sel.value = h2h[k]; });
+}
+['a', 'b'].forEach(k => {
+  $('#sel' + k.toUpperCase()).addEventListener('change', e => { h2h[k] = e.target.value; renderH2H(); });
+});
+$('#swapBtn').addEventListener('click', () => {
+  const t = h2h.a; h2h.a = h2h.b; h2h.b = t;
+  $('#selA').value = h2h.a; $('#selB').value = h2h.b;
+  renderH2H();
+});
+function ratioText(r){
+  if (r >= 100) return Math.round(r).toLocaleString('en');
+  if (r >= 10) return String(Math.round(r));
+  if (r >= 2) return String(parseFloat(r.toFixed(1)));
+  return String(parseFloat(r.toFixed(2)));
+}
+function renderH2H(){
+  const A = byId[h2h.a], B = byId[h2h.b];
+  $('#emoA').textContent = A.e; $('#emoB').textContent = B.e;
+  $('#spdA').innerHTML = speedSpan(A.kmh); $('#spdB').innerHTML = speedSpan(B.kmh);
+  $('#noteA').innerHTML = A.note ? withSpeeds(A.note) : '';
+  $('#noteB').innerHTML = B.note ? withSpeeds(B.note) : '';
+  const verdict = $('#verdict'), pts = $('#points');
+  if (A.id === B.id){
+    verdict.textContent = 'Same animal in both lanes';
+    pts.innerHTML = '<li>Pick a different animal on one side to see who wins.</li>';
+  } else if (A.kmh === B.kmh){
+    verdict.textContent = 'Dead heat';
+    pts.innerHTML = '<li>' + esc(cap(A)) + ' and ' + esc(mid(B)) + ' both top out at <b>' + speedSpan(A.kmh) + '</b>, so neither can pull away.</li>';
+  } else {
+    const F = A.kmh > B.kmh ? A : B, S = F === A ? B : A;
+    const vf = F.kmh / 3.6, vs = S.kmh / 3.6;
+    verdict.textContent = cap(F) + ' wins';
+    pts.innerHTML =
+      '<li>' + esc(cap(F)) + ' is <b>' + ratioText(F.kmh / S.kmh) + '×</b> as fast as ' + esc(mid(S)) + '.</li>' +
+      '<li>After 10 seconds, ' + esc(mid(F)) + ' would be <b>' + fmtDist((vf - vs) * 10) + '</b> ahead.</li>' +
+      (100 * (1 - vs / vf) >= 99.5
+        ? '<li>To tie over 100 m, ' + esc(mid(S)) + ' would need practically the whole <b>100 m</b> as a head start.</li>'
+        : '<li>To tie over 100 m, ' + esc(mid(S)) + ' would need a <b>' + fmtDist(100 * (1 - vs / vf)) + '</b> head start.</li>') +
+      '<li>Over 100 m, ' + esc(mid(F)) + ' takes <b>' + fmtDur(100 / vf) + '</b> and ' + esc(mid(S)) + ' takes <b>' + fmtDur(100 / vs) + '</b>.</li>';
+  }
+  duel.set([A.id, B.id], 2.4, 3.6, 2.4);
+}
+
+/* ---------- surprises ---------- */
+$('#facts').innerHTML = FACTS.map((f, i) => '<li><span class="fact-emo" aria-hidden="true">' + f.emo + '</span><p>' + withSpeeds(f.text) + '</p>' +
+  (f.race ? '<button type="button" class="linkbtn" data-fact="' + i + '">Watch the race</button>' : '') + '</li>').join('');
+$('#facts').addEventListener('click', e => {
+  const b = e.target.closest('[data-fact]'); if (!b) return;
+  const f = FACTS[parseInt(b.dataset.fact, 10)];
+  race.ids = f.race.slice(); race.dist = 100; setSeg($('#distSeg'), 100);
+  buildTrack();
+  $('#race').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  setTimeout(startRace, reduceMotion ? 0 : 750);
+});
+
+/* ---------- ladder ---------- */
+const ladder = { hab: 'all', scale: 'linear', seen: false };
+const rowsEl = $('#rows');
+function ladderList(){ return ANIMALS.filter(a => ladder.hab === 'all' || a.hab === ladder.hab).sort((x, y) => y.kmh - x.kmh); }
+function barPct(v, max){
+  if (ladder.scale === 'log'){
+    const lo = Math.log10(0.03), hi = Math.log10(400);
+    return Math.max(0, Math.min(100, (Math.log10(v) - lo) / (hi - lo) * 100));
+  }
+  return Math.min(100, v / max * 100);
+}
+function applyBars(animate){
+  const list = ladderList(), max = list[0].kmh;
+  rowsEl.style.setProperty('--ref', barPct(BOLT_KMH, max).toFixed(2) + '%');
+  const bars = $$('.r-bar', rowsEl);
+  bars.forEach((b, i) => {
+    const a = byId[b.dataset.id];
+    b.style.transitionDelay = animate && !reduceMotion ? Math.min(i * 16, 520) + 'ms' : '0ms';
+    b.style.width = barPct(a.kmh, max).toFixed(2) + '%';
+  });
+}
+function renderLadder(){
+  const list = ladderList();
+  rowsEl.innerHTML = list.map(a => '<li class="row' + (a.human ? ' human' : '') + '" data-id="' + a.id + '">' +
+    '<button type="button" class="row-main" aria-expanded="false">' +
+      '<span class="emo" aria-hidden="true">' + a.e + '</span>' +
+      '<span class="r-name">' + esc(a.name) + (a.disputed ? ' <small>disputed</small>' : '') + '</span>' +
+      '<span class="r-track"><span class="r-bar' + (a.dive ? ' dive' : '') + '" data-id="' + a.id + '" style="--c:var(--bar-' + (a.human ? 'human' : a.hab) + ')"></span></span>' +
+      '<span class="r-val" data-kmh="' + a.kmh + '">' + fmtSpeed(a.kmh) + '</span>' +
+    '</button>' +
+    '<div class="row-more" hidden>' + (a.note ? '<p>' + withSpeeds(a.note) + '</p>' : '') +
+      '<button type="button" class="pill-btn" data-act="race"></button><span class="row-msg" role="status"></span></div></li>').join('');
+  syncLadderButtons();
+  if (ladder.seen) requestAnimationFrame(() => requestAnimationFrame(() => applyBars(true)));
+}
+function syncLadderButtons(){
+  $$('.row', rowsEl).forEach(li => {
+    const b = li.querySelector('[data-act="race"]');
+    if (b) b.textContent = race.ids.indexOf(li.dataset.id) >= 0 ? 'Remove from race' : 'Add to race';
+  });
+}
+rowsEl.addEventListener('click', e => {
+  const act = e.target.closest('[data-act="race"]');
+  if (act){
+    const li = act.closest('.row'), id = li.dataset.id, was = race.ids.indexOf(id) >= 0;
+    const ok = toggleRacer(id);
+    li.querySelector('.row-msg').textContent = !ok ? 'All eight lanes are full. Remove a racer first.' : (was ? 'Removed from the race.' : 'Added to the race.');
+    return;
+  }
+  const btn = e.target.closest('.row-main'); if (!btn) return;
+  const li = btn.parentElement, more = li.querySelector('.row-more'), open = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!open));
+  more.hidden = open;
+});
+const counts = { all: ANIMALS.length };
+['land', 'sky', 'water'].forEach(h => { counts[h] = ANIMALS.filter(a => a.hab === h).length; });
+makeSeg($('#habSeg'), [{v:'all',label:'All ' + counts.all},{v:'land',label:'Land ' + counts.land},{v:'sky',label:'Sky ' + counts.sky},{v:'water',label:'Water ' + counts.water}], ladder.hab, v => { ladder.hab = v; renderLadder(); });
+makeSeg($('#scaleSeg'), [{v:'linear',label:'Linear'},{v:'log',label:'Log scale'}], ladder.scale, v => { ladder.scale = v; setScaleNote(); if (ladder.seen) applyBars(false); });
+function setScaleNote(){
+  $('#scaleNote').textContent = ladder.scale === 'log'
+    ? 'Log scale: each equal step along the bar means ten times the speed, so the slowest animals stay visible.'
+    : 'Bar length is proportional to speed. Switch to log scale to spread out the slow animals.';
+}
+$('#legend').innerHTML =
+  '<span><i style="--c:var(--bar-land)"></i>Land</span><span><i style="--c:var(--bar-sky)"></i>Sky</span><span><i style="--c:var(--bar-water)"></i>Water</span>' +
+  '<span><i style="--c:var(--bar-human)"></i>Humans</span><span><i class="line" style="--c:var(--bar-human)"></i>Usain Bolt’s top speed, ' + speedSpan(BOLT_KMH) + '</span>';
+setScaleNote();
+renderLadder();
+if ('IntersectionObserver' in window && !reduceMotion){
+  const io = new IntersectionObserver(es => {
+    if (es[0].isIntersecting){ ladder.seen = true; applyBars(true); io.disconnect(); }
+  }, { rootMargin: '0px 0px -15% 0px' });
+  io.observe(rowsEl);
+} else { ladder.seen = true; applyBars(false); }
+
+/* ---------- units ---------- */
+function setUnit(u){
+  unit = u;
+  try { localStorage.setItem('topspeed-unit', u); } catch (e) {}
+  $$('[data-unit]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.unit === u)));
+  refreshSpeeds();
+  fillSelects();
+}
+$$('[data-unit]').forEach(b => b.addEventListener('click', () => setUnit(b.dataset.unit)));
+
+/* ---------- init ---------- */
+fillSelects();
+renderH2H();
+buildTrack();
+setUnit(unit);
+
+let rz = 0;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(rz);
+  rz = requestAnimationFrame(() => { race.g = geom(lanesEl); layoutRace(); heat.relayout(); duel.relayout(); });
+});
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { race.g = geom(lanesEl); layoutRace(); heat.relayout(); duel.relayout(); });
+})();
+</script>
+</body>
+</html>
